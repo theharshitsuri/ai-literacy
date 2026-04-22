@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>areyouairead​y.net — prototype</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght,SOFT@9..144,400..900,0..100&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #f3efe6;
+    --paper-2: #ebe6d9;
+    --ink: #14110d;
+    --ink-2: #3a352c;
+    --muted: #857e6f;
+    --line: #d8d1bf;
+    --accent: #e24a1a;
+    --accent-ink: #ffffff;
+    --ok: #2d6a4f;
+    --warn: #b45309;
+    --bad: #9b1c1c;
+
+    --serif: 'Instrument Serif', 'Fraunces', Georgia, serif;
+    --sans: 'Inter', -apple-system, system-ui, sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, Menlo, monospace;
+  }
+  html, body { margin: 0; padding: 0; background: var(--paper); color: var(--ink);
+    font-family: var(--sans); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+  * { box-sizing: border-box; }
+  button { font-family: inherit; }
+  ::selection { background: var(--accent); color: var(--accent-ink); }
+  a { color: inherit; }
+
+  /* ---------- Site shell ---------- */
+  .site { min-height: 100vh; }
+
+  /* ---------- Responsive grids ---------- */
+  .hero-grid {
+    display: grid;
+    grid-template-columns: 1.2fr 1fr;
+    gap: clamp(32px, 5vw, 72px);
+    align-items: start;
+  }
+  .stats-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .testimonial-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+  }
+  .job-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .result-hero {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: clamp(32px, 5vw, 60px);
+    align-items: start;
+  }
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: clamp(32px, 5vw, 60px);
+  }
+  .prompt-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+  }
+  .ba-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  /* ---------- Tablet ---------- */
+  @media (max-width: 900px) {
+    .hero-grid { grid-template-columns: 1fr; }
+    .stats-grid { grid-template-columns: 1fr; }
+    .testimonial-grid { grid-template-columns: 1fr; }
+    .job-grid { grid-template-columns: repeat(2, 1fr); }
+    .result-hero { grid-template-columns: 1fr; }
+    .two-col { grid-template-columns: 1fr; gap: 32px; }
+    .prompt-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Phone ---------- */
+  @media (max-width: 520px) {
+    .job-grid { grid-template-columns: 1fr; }
+    .ba-grid { grid-template-columns: 1fr; }
+  }
+
+  /* ---------- Dev toolbar (screen switcher) ---------- */
+  .dev-toolbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 1000;
+    background: #14110d; border-bottom: 1px solid #3a352c;
+    padding: 6px 10px;
+  }
+  .dev-toolbar-inner {
+    max-width: 1280px; margin: 0 auto;
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+  .dev-toolbar-label { color: var(--accent); padding: 4px 8px; font-weight: 700; }
+  .dev-toolbar button {
+    background: transparent; border: 1px solid transparent;
+    color: #a9a392; padding: 5px 9px; border-radius: 4px; cursor: pointer;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+  .dev-toolbar button:hover { color: #fff; background: rgba(255,255,255,0.05); }
+  .dev-toolbar button.active { background: #f3efe6; color: #14110d; font-weight: 600; }
+  .dev-toolbar .tweaks-toggle { margin-left: auto; font-size: 14px; }
+
+  /* Site takes the full viewport. Dev toolbar is hidden by default (press "d" to show). */
+  .site { padding-top: 0; }
+  .site.site-with-dev { padding-top: 36px; }
+
+  /* ---------- Tweaks panel ---------- */
+  .tweaks-panel { position: fixed; right: 20px; bottom: 20px; width: 300px;
+    background: #1a1916; border: 1px solid rgba(255,255,255,0.12); border-radius: 14px;
+    padding: 18px; z-index: 1100; color: #f3efe6;
+    box-shadow: 0 30px 60px rgba(0,0,0,0.5); font-family: var(--sans); display: none;
+    max-height: 80vh; overflow: auto; }
+  .tweaks-panel.open { display: block; }
+  .tweaks-panel h3 { font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+    letter-spacing: 0.2em; color: #a9a392; margin: 0 0 12px; }
+  .tweak-row { margin-bottom: 14px; }
+  .tweak-row label { display: block; font-size: 11px; color: #a9a392;
+    font-family: var(--mono); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+  .tweak-row .chips { display: flex; gap: 4px; flex-wrap: wrap; }
+  .tweak-row .chip { font-size: 12px; padding: 5px 9px; border-radius: 6px; cursor: pointer;
+    background: rgba(255,255,255,0.05); color: #d8d1bf; border: 1px solid rgba(255,255,255,0.08); }
+  .tweak-row .chip.on { background: #f3efe6; color: #14110d; border-color: #f3efe6; }
+  .tweak-row .swatches { display: flex; gap: 6px; }
+  .tweak-row .swatch { width: 24px; height: 24px; border-radius: 50%; cursor: pointer; border: 2px solid transparent; }
+  .tweak-row .swatch.on { border-color: #f3efe6; }
+</style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <!-- Error surface -->
+  <script>
+    window.addEventListener('error', function (e) {
+      var pre = document.createElement('pre');
+      pre.style.cssText = 'position:fixed;inset:20px;overflow:auto;background:#1a1916;color:#ffb4a6;font:12px/1.5 ui-monospace,Menlo,monospace;padding:20px;border:1px solid #444;z-index:9999;white-space:pre-wrap;border-radius:8px;';
+      pre.textContent = 'ERROR\n\n' + (e.message || e.error) + '\n\n' + (e.filename || '') + ':' + (e.lineno || '') + '\n\nIf this page is served from file:// the browser blocks <script src=> fetches of local .jsx. Serve it over http:// instead, e.g.  python3 -m http.server  — or open index-standalone.html (self-contained, double-clickable).';
+      document.body.appendChild(pre);
+    }, true);
+  </script>
+
+  <script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin></script>
+  <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin></script>
+
+  <script type="text/babel" src="src/bundle.jsx"></script>
+</body>
+</html>
