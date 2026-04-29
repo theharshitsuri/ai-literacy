@@ -9,6 +9,8 @@ function ResultScreen({ tweaks, answers, jobId, jobOther, onEmail, onBack, onWor
   const jobDisplay = jobId === 'other' && jobOther ? jobOther : job.label;
   const tone = tweaks.tone || 'warm';
   const vibeLine = level.vibe[tone] || level.vibe.warm;
+  const [emailVal, setEmailVal] = React.useState('');
+  const [emailSent, setEmailSent] = React.useState(false);
 
   return (
     <>
@@ -121,6 +123,69 @@ function ResultScreen({ tweaks, answers, jobId, jobOther, onEmail, onBack, onWor
               <MetaRow label="JOB CONTEXT" value={jobDisplay.toLowerCase()} />
               <MetaRow label="TIME INVESTED" value="≈ 2 min" />
             </div>
+          </div>
+        </Container>
+      </Section>
+
+      {/* EMAIL CAPTURE — optional, not a gate */}
+      <Section>
+        <Container size="lg" style={{ paddingTop: 'clamp(20px, 3vw, 28px)', paddingBottom: 'clamp(20px, 3vw, 28px)' }}>
+          <div style={{
+            padding: 'clamp(18px, 2.5vw, 28px)',
+            background: 'var(--paper-2)',
+            border: '1px solid var(--line)',
+            borderRadius: 10,
+            display: 'flex', flexWrap: 'wrap', gap: 20, alignItems: 'center',
+            justifyContent: 'space-between',
+          }}>
+            <div style={{ flex: '1 1 260px', minWidth: 0 }}>
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 10, letterSpacing: '0.18em', color: 'var(--muted)', textTransform: 'uppercase', marginBottom: 6 }}>
+                · optional ·
+              </div>
+              <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--ink)', marginBottom: 4 }}>
+                Want to save your results?
+              </div>
+              <div style={{ fontSize: 13, color: 'var(--ink-2)', lineHeight: 1.4 }}>
+                We'll email them to you — plus a weekly prompt tailored to your level. Unsubscribe anytime.
+              </div>
+            </div>
+            {emailSent ? (
+              <div style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--ok)', letterSpacing: '0.08em' }}>
+                ✓ Check your inbox.
+              </div>
+            ) : (
+              <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', flex: '1 1 240px', maxWidth: 420 }}>
+                <input
+                  type="email"
+                  value={emailVal}
+                  onChange={e => setEmailVal(e.target.value)}
+                  placeholder="you@example.com"
+                  style={{
+                    flex: 1, padding: '12px 14px',
+                    border: '1.5px solid var(--line)', borderRadius: 8,
+                    background: 'var(--paper)', color: 'var(--ink)',
+                    fontFamily: 'var(--sans)', fontSize: 15, outline: 'none', minWidth: 160,
+                  }}
+                  onFocus={e => (e.currentTarget.style.borderColor = 'var(--ink)')}
+                  onBlur={e => (e.currentTarget.style.borderColor = 'var(--line)')}
+                  onKeyDown={e => { if (e.key === 'Enter' && emailVal.includes('@')) setEmailSent(true); }}
+                />
+                <button
+                  disabled={!emailVal.includes('@')}
+                  onClick={() => setEmailSent(true)}
+                  style={{
+                    padding: '12px 18px', border: 'none', borderRadius: 8,
+                    background: emailVal.includes('@') ? 'var(--ink)' : 'var(--line)',
+                    color: emailVal.includes('@') ? 'var(--paper)' : 'var(--muted)',
+                    fontFamily: 'var(--sans)', fontSize: 14, fontWeight: 600,
+                    cursor: emailVal.includes('@') ? 'pointer' : 'not-allowed',
+                    whiteSpace: 'nowrap', transition: 'background .15s, color .15s',
+                  }}
+                >
+                  Send results →
+                </button>
+              </div>
+            )}
           </div>
         </Container>
       </Section>
@@ -402,30 +467,24 @@ function ResultScreen({ tweaks, answers, jobId, jobOther, onEmail, onBack, onWor
         </Container>
       </Section>
 
-      {/* CTA — newsletter signup */}
+      {/* FOOTER CTA */}
       <Section bg="var(--ink)" style={{ color: 'var(--paper)' }}>
         <Container size="md" style={{ paddingTop: 'clamp(60px, 8vw, 100px)', paddingBottom: 'clamp(60px, 8vw, 100px)', textAlign: 'center' }}>
-          <div style={{ fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.2em', color: '#a9a392', textTransform: 'uppercase', marginBottom: 16 }}>
-            · ONE MORE THING ·
-          </div>
           <h2 style={{
             fontFamily: serifStack, fontWeight: 400,
-            fontSize: 'clamp(34px, 5vw, 62px)',
-            letterSpacing: '-0.025em', lineHeight: 1, margin: 0,
-            color: 'var(--paper)',
-            textWrap: 'balance',
+            fontSize: 'clamp(32px, 5vw, 58px)',
+            letterSpacing: '-0.025em', lineHeight: 1.05, margin: 0,
+            color: 'var(--paper)', textWrap: 'balance',
           }}>
-            Want one <span style={{ color: 'var(--accent)', fontStyle: tweaks.typePair !== 'sans' ? 'italic' : 'normal' }}>bespoke prompt</span> every week?
+            Know someone who should find out <span style={{ color: 'var(--accent)', fontStyle: tweaks.typePair !== 'sans' ? 'italic' : 'normal' }}>where they stand?</span>
           </h2>
-          <p style={{ marginTop: 22, fontSize: 16, color: '#a9a392', maxWidth: 520, margin: '22px auto 0', lineHeight: 1.5 }}>
-            A weekly 5-minute read with one prompt to try, one thing not to do, and one thing changing in AI this week.
+          <p style={{ marginTop: 20, fontSize: 16, color: '#a9a392', maxWidth: 460, margin: '20px auto 0', lineHeight: 1.5 }}>
+            Most people overestimate how AI-ready they are. Send them the quiz — it's free to take.
           </p>
-          <div style={{ marginTop: 32, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
-            <BigButton onClick={onEmail} variant="paper">Send me the weekly — free first month</BigButton>
-            <BigButton onClick={onBack} variant="outline" style={{ background: 'transparent', color: 'var(--paper)', borderColor: '#3a352c' }} arrow={false}>Start over</BigButton>
-          </div>
-          <div style={{ marginTop: 18, fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.12em', color: '#857e6f', textTransform: 'uppercase' }}>
-            $9/mo after · unsubscribe anytime
+          <div style={{ marginTop: 36, display: 'flex', gap: 12, justifyContent: 'center', flexWrap: 'wrap' }}>
+            <BigButton onClick={onBack} variant="outline" style={{ background: 'transparent', color: 'var(--paper)', borderColor: '#3a352c' }} arrow={false}>
+              ← Start over
+            </BigButton>
           </div>
         </Container>
       </Section>

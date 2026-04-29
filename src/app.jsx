@@ -14,9 +14,9 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 
 const SCREENS = [
   { id: 'landing',    label: 'Landing' },
+  { id: 'profiling',  label: 'Profiling (3 Qs)' },
   { id: 'checkout',   label: '$1 Checkout', paywallOnly: true },
-  { id: 'quiz',       label: 'Quiz' },
-  { id: 'job',        label: 'Job' },
+  { id: 'quiz',       label: 'Quiz (10 Qs)' },
   { id: 'processing', label: 'Processing' },
   { id: 'result',     label: 'Result' },
   { id: 'workplace',  label: 'Workplace' },
@@ -55,6 +55,7 @@ function App() {
     } catch { return 'landing'; }
   });
   const [answers, setAnswers] = useState({});
+  const [profilingAnswers, setProfilingAnswers] = useState({});
   const [jobId, setJobId] = useState(null);
   const [jobOther, setJobOther] = useState('');
   const [tweaksOpen, setTweaksOpen] = useState(false);
@@ -82,19 +83,30 @@ function App() {
   const effectiveJob = jobId || DEMO_JOB;
   const effectiveOther = jobOther;
 
-  const startQuiz = () => setScreen(tweaks.paywall ? 'checkout' : 'quiz');
-  const resetAll = () => { setAnswers({}); setJobId(null); setJobOther(''); setScreen('landing'); };
+  const startQuiz = () => setScreen('profiling');
+  const resetAll = () => { setAnswers({}); setProfilingAnswers({}); setJobId(null); setJobOther(''); setScreen('landing'); };
 
   const screenEl = (() => {
     switch (screen) {
       case 'landing':
         return <LandingScreen tweaks={tweaks} onStart={startQuiz} />;
+      case 'profiling':
+        return <QuizScreen tweaks={tweaks} phase="profiling"
+                  answers={answers} setAnswers={setAnswers}
+                  profilingAnswers={profilingAnswers} setProfilingAnswers={setProfilingAnswers}
+                  onComplete={(prof) => { setJobId(prof.p1 || null); setScreen(tweaks.paywall ? 'checkout' : 'quiz'); }}
+                  onBack={() => setScreen('landing')} />;
       case 'checkout':
-        return <CheckoutScreen onComplete={() => setScreen('quiz')} onBack={() => setScreen('landing')} />;
+        return <CheckoutScreen
+                  profilingAnswers={profilingAnswers}
+                  onComplete={() => setScreen('quiz')}
+                  onBack={() => setScreen('profiling')} />;
       case 'quiz':
-        return <QuizScreen tweaks={tweaks} answers={answers} setAnswers={setAnswers}
-                  onComplete={(a) => { setAnswers(a); setScreen('job'); }}
-                  onBack={() => setScreen(tweaks.paywall ? 'checkout' : 'landing')} />;
+        return <QuizScreen tweaks={tweaks} phase="quiz"
+                  answers={answers} setAnswers={setAnswers}
+                  profilingAnswers={profilingAnswers} setProfilingAnswers={setProfilingAnswers}
+                  onComplete={(quizAnswers) => { setAnswers(quizAnswers); setScreen('processing'); }}
+                  onBack={() => setScreen('profiling')} />;
       case 'job':
         return <JobScreen tweaks={tweaks}
                   jobId={jobId} jobOther={jobOther}

@@ -13,6 +13,7 @@ const SOURCES = [
   'src/screens/quiz.jsx',
   'src/screens/job.jsx',
   'src/screens/processing.jsx',
+  'src/screens/result_preview.jsx',
   'src/screens/result.jsx',
   'src/screens/workplace.jsx',
   'src/screens/confirm.jsx',

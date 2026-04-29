@@ -48,21 +48,15 @@ function LandingScreen({ tweaks, onStart }) {
 
               {/* CTA */}
               <div style={{ marginTop: 36, display: 'flex', flexWrap: 'wrap', gap: 12, alignItems: 'center' }}>
-                {tweaks.paywall ? (
-                  <BigButton onClick={onStart} variant="ink">
-                    Begin diagnostic — $1
-                  </BigButton>
-                ) : (
-                  <BigButton onClick={onStart} variant="ink">
-                    Begin diagnostic — free
-                  </BigButton>
-                )}
+                <BigButton onClick={onStart} variant="ink">
+                  Test your AI literacy →
+                </BigButton>
                 <div style={{
                   fontFamily: 'var(--mono)', fontSize: 11,
                   color: 'var(--muted)', letterSpacing: '0.1em',
                   textTransform: 'uppercase',
                 }}>
-                  {tweaks.paywall ? 'Apple Pay · Instant refund' : '8 questions · no signup'}
+                  free · no signup · 90 seconds
                 </div>
               </div>
 
@@ -281,11 +275,11 @@ function LandingScreen({ tweaks, onStart }) {
           </p>
           <div style={{ marginTop: 36, display: 'flex', justifyContent: 'center' }}>
             <BigButton onClick={onStart} variant="paper" style={{ minWidth: 280 }}>
-              {tweaks.paywall ? 'Begin diagnostic — $1' : 'Begin diagnostic — free'}
+              Test your AI literacy →
             </BigButton>
           </div>
           <div style={{ marginTop: 18, fontFamily: 'var(--mono)', fontSize: 11, letterSpacing: '0.12em', color: '#857e6f', textTransform: 'uppercase' }}>
-            {tweaks.paywall ? 'Apple Pay / Google Pay · Not useful? Instant refund.' : 'No signup to start · 8 questions'}
+            free · no email required · no signup
           </div>
         </Container>
       </Section>
