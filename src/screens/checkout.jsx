@@ -1,5 +1,8 @@
 // $1 Stripe-style checkout, responsive.
-function CheckoutScreen({ onComplete, onBack }) {
+function CheckoutScreen({ onComplete, onBack, profilingAnswers }) {
+  const prof = profilingAnswers || {};
+  const job = window.JOBS && window.JOBS.find(j => j.id === prof.p1);
+  const isNovice = prof.p2 === 'never' || prof.p2 === 'heard';
   const [method, setMethod] = React.useState('apple');
   const [loading, setLoading] = React.useState(false);
 
@@ -41,8 +44,15 @@ function CheckoutScreen({ onComplete, onBack }) {
               <span style={{ fontFamily: 'var(--serif)', fontSize: 'clamp(64px, 10vw, 96px)', lineHeight: 1, fontWeight: 400 }}>$1</span>
               <span style={{ fontFamily: 'var(--mono)', fontSize: 13, color: 'var(--muted)' }}>.00 USD</span>
             </div>
-            <div style={{ fontSize: 15, color: 'var(--ink-2)', marginTop: 8 }}>
-              AI literacy diagnostic · personalized result · 7-day plan · safety guide
+            <div style={{ fontSize: 17, fontWeight: 600, color: 'var(--ink)', marginTop: 10, lineHeight: 1.3 }}>
+              {job
+                ? `Your personalised AI diagnostic for ${job.label.toLowerCase()} is ready.`
+                : 'Your personalised AI diagnostic is ready.'}
+            </div>
+            <div style={{ fontSize: 14, color: 'var(--ink-2)', marginTop: 6, lineHeight: 1.5 }}>
+              {isNovice
+                ? "$1 unlocks your beginner-friendly 10-question test and your full personalised report."
+                : "$1 unlocks your full 10-question test and personalised report — tailored to your profile."}
             </div>
           </div>
 
@@ -54,7 +64,7 @@ function CheckoutScreen({ onComplete, onBack }) {
             marginBottom: 24,
           }}>
             {[
-              ['Diagnostic quiz (8 Qs)', '$0.00'],
+              ['Diagnostic quiz (10 Qs)', '$0.00'],
               ['Level × job personalized profile', '$0.00'],
               ['5 copy-paste prompts for your job', '$0.00'],
               ['Weekly newsletter (first month)', 'free'],
