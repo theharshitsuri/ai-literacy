@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Compass — find your bearing in AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper:    #f5f1ea;
+    --paper-2:  #ebe6dd;
+    --paper-3:  #e1dbcb;
+    --ink:      #1a1614;
+    --ink-2:    #4a423a;
+    --muted:    #857e6f;
+    --line:     #d8d2c4;
+    --accent:   #d44a1c;
+    --accent-2: #b03c14;
+    --ok:       #2d6a4f;
+    --serif: 'Fraunces', Georgia, serif;
+    --sans:  'Inter', system-ui, -apple-system, sans-serif;
+    --mono:  'JetBrains Mono', ui-monospace, monospace;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { background: var(--paper); color: var(--ink); font-family: var(--sans); -webkit-font-smoothing: antialiased; }
+  a { color: inherit; text-decoration: none; }
+  ::selection { background: var(--ink); color: var(--paper); }
+
+  /* ─── nav ──────────────────────────────────────────── */
+  nav.top {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 22px clamp(20px, 4vw, 64px);
+    border-bottom: 1px solid var(--line);
+    background: var(--paper);
+    position: sticky; top: 0; z-index: 10;
+  }
+  .brand { display: flex; align-items: center; gap: 10px; }
+  .brand svg { width: 22px; height: 22px; }
+  .brand-name { font-family: var(--serif); font-size: 20px; font-weight: 500; letter-spacing: -0.01em; }
+  .brand-name em { font-style: normal; color: var(--accent); }
+  nav.top .links { display: flex; gap: 22px; font-size: 14px; color: var(--muted); }
+  nav.top .links a:hover { color: var(--ink); }
+  nav.top .signin { font-family: var(--mono); font-size: 12px; letter-spacing: 0.06em; text-transform: uppercase; padding: 8px 16px; border: 1px solid var(--ink); border-radius: 4px; color: var(--ink); }
+  nav.top .signin:hover { background: var(--ink); color: var(--paper); }
+
+  /* ─── hero ─────────────────────────────────────────── */
+  section.hero {
+    padding: clamp(48px, 8vw, 120px) clamp(20px, 4vw, 64px);
+    max-width: 1280px; margin: 0 auto;
+    display: grid; grid-template-columns: 1.1fr 1fr; gap: clamp(40px, 6vw, 80px);
+    align-items: center;
+  }
+  @media (max-width: 880px) { section.hero { grid-template-columns: 1fr; } }
+
+  .kicker {
+    display: inline-flex; align-items: center; gap: 10px;
+    font-family: var(--mono); font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--muted); margin-bottom: 28px;
+  }
+  .kicker .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+
+  h1.headline {
+    font-family: var(--serif); font-weight: 400;
+    font-size: clamp(48px, 7vw, 88px); line-height: 0.95; letter-spacing: -0.035em;
+    color: var(--ink); text-wrap: balance;
+  }
+  h1.headline em { font-style: italic; color: var(--accent); }
+
+  .lede {
+    margin-top: 28px; max-width: 540px;
+    font-size: clamp(16px, 1.6vw, 19px); line-height: 1.55; color: var(--ink-2);
+  }
+
+  .cta-row { margin-top: 40px; display: flex; flex-wrap: wrap; gap: 20px; align-items: center; }
+  .cta {
+    display: inline-flex; align-items: center; gap: 12px;
+    padding: 18px 28px;
+    background: var(--ink); color: var(--paper);
+    font-family: var(--sans); font-size: 16px; font-weight: 600;
+    border-radius: 8px; border: none;
+    transition: transform .15s, background .15s;
+    cursor: pointer;
+  }
+  .cta:hover { transform: translateY(-1px); background: var(--accent); }
+  .cta-arrow { transition: transform .2s; }
+  .cta:hover .cta-arrow { transform: translateX(4px); }
+  .micro { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; color: var(--muted); text-transform: uppercase; }
+
+  /* ─── compass visual ──────────────────────────────── */
+  .compass-wrap {
+    display: flex; justify-content: center; align-items: center;
+    position: relative;
+  }
+  .compass-wrap svg { width: 100%; max-width: 460px; height: auto; }
+  .compass-rose { animation: drift 20s ease-in-out infinite; transform-origin: 50% 50%; }
+  @keyframes drift {
+    0%, 100% { transform: rotate(-2deg); }
+    50%      { transform: rotate(2deg); }
+  }
+  .needle { transform-origin: 50% 50%; animation: needle-drift 8s ease-in-out infinite; }
+  @keyframes needle-drift {
+    0%, 100% { transform: rotate(-6deg); }
+    50%      { transform: rotate(4deg); }
+  }
+  .level-tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; fill: var(--ink-2); text-transform: uppercase; }
+  .level-tag.active { fill: var(--accent); font-weight: 600; }
+
+  /* ─── how it works ────────────────────────────────── */
+  section.how {
+    padding: clamp(60px, 8vw, 100px) clamp(20px, 4vw, 64px);
+    max-width: 1200px; margin: 0 auto;
+    border-top: 1px solid var(--line);
+  }
+  .section-eyebrow { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--muted); margin-bottom: 16px; }
+  .section-title { font-family: var(--serif); font-weight: 400; font-size: clamp(32px, 4vw, 48px); line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 48px; max-width: 700px; }
+
+  .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+  @media (max-width: 880px) { .steps { grid-template-columns: 1fr; } }
+  .step { padding: 32px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); transition: background .2s; }
+  .step:hover { background: var(--paper-2); }
+  .step-num { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; color: var(--accent); margin-bottom: 14px; }
+  .step-title { font-family: var(--serif); font-size: 24px; font-weight: 400; line-height: 1.15; letter-spacing: -0.01em; margin-bottom: 10px; }
+  .step-body { font-size: 15px; line-height: 1.55; color: var(--ink-2); }
+
+  /* ─── sample feed ─────────────────────────────────── */
+  section.sample {
+    padding: clamp(60px, 8vw, 100px) clamp(20px, 4vw, 64px);
+    background: var(--paper-2);
+  }
+  .sample-inner { max-width: 1200px; margin: 0 auto; }
+  .feed-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  @media (max-width: 740px) { .feed-grid { grid-template-columns: 1fr; } }
+
+  .card { background: var(--paper); border: 1px solid var(--line); border-radius: 12px; padding: 24px; display: flex; flex-direction: column; gap: 14px; transition: transform .15s, box-shadow .15s; }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(26,22,20,0.08); }
+  .card-meta { display: flex; gap: 8px; flex-wrap: wrap; font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; }
+  .pill { padding: 4px 10px; border-radius: 3px; border: 1px solid var(--line); color: var(--ink-2); background: var(--paper-2); }
+  .pill.type { color: var(--accent); border-color: var(--accent); background: transparent; }
+  .card-title { font-family: var(--serif); font-size: 20px; font-weight: 500; line-height: 1.25; letter-spacing: -0.01em; color: var(--ink); }
+  .card-source { font-size: 13px; color: var(--muted); }
+  .card-caption { font-size: 14px; line-height: 1.5; color: var(--ink-2); border-left: 2px solid var(--accent); padding-left: 12px; font-style: italic; }
+  .card-caption strong { font-style: normal; color: var(--ink); font-weight: 600; }
+
+  /* ─── pricing ─────────────────────────────────────── */
+  section.pricing {
+    padding: clamp(60px, 8vw, 100px) clamp(20px, 4vw, 64px);
+    max-width: 1200px; margin: 0 auto;
+  }
+  .plans { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; max-width: 880px; }
+  @media (max-width: 720px) { .plans { grid-template-columns: 1fr; } }
+  .plan { padding: 36px; border: 1px solid var(--line); border-radius: 12px; background: var(--paper); }
+  .plan.premium { background: var(--ink); color: var(--paper); border-color: var(--ink); position: relative; overflow: hidden; }
+  .plan.premium .price-num, .plan.premium h3, .plan.premium .feat li { color: var(--paper); }
+  .plan.premium .price-period, .plan.premium .desc { color: rgba(245,241,234,0.6); }
+  .plan-tag { font-family: var(--mono); font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  .plan.premium .plan-tag { color: var(--accent); }
+  .plan h3 { font-family: var(--serif); font-size: 32px; font-weight: 400; line-height: 1.05; letter-spacing: -0.02em; margin-bottom: 8px; }
+  .desc { font-size: 14px; color: var(--ink-2); margin-bottom: 24px; }
+  .price { display: flex; align-items: baseline; gap: 6px; margin-bottom: 24px; }
+  .price-num { font-family: var(--serif); font-size: 56px; font-weight: 400; line-height: 1; }
+  .price-period { font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em; color: var(--muted); }
+  .feat { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+  .feat li { font-size: 14px; line-height: 1.45; color: var(--ink-2); padding-left: 22px; position: relative; }
+  .feat li::before { content: '→'; position: absolute; left: 0; color: var(--accent); font-family: var(--mono); }
+  .plan .cta { padding: 14px 22px; font-size: 14px; width: 100%; justify-content: center; border-radius: 6px; }
+  .plan.free .cta { background: var(--ink); }
+  .plan.premium .cta { background: var(--paper); color: var(--ink); }
+  .plan.premium .cta:hover { background: var(--accent); color: var(--paper); }
+
+  /* ─── footer ──────────────────────────────────────── */
+  footer { padding: 60px clamp(20px, 4vw, 64px); border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 24px; }
+  .foot-brand { font-family: var(--serif); font-size: 18px; }
+  .foot-line { font-family: var(--mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase; color: var(--muted); }
+
+  /* utility */
+  .h-divider { height: 1px; background: var(--line); margin: 0 auto; max-width: 1200px; }
+</style>
+</head>
+<body>
+
+<!-- ─── NAV ─── -->
+<nav class="top">
+  <a class="brand" href="/">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4">
+      <circle cx="12" cy="12" r="10" />
+      <path d="M12 2 L14 11 L12 12 L10 11 Z" fill="currentColor" stroke="none" />
+      <path d="M12 22 L10 13 L12 12 L14 13 Z" fill="none" />
+      <circle cx="12" cy="12" r="1.2" fill="currentColor" stroke="none" />
+    </svg>
+    <span class="brand-name">Compass<em>.</em></span>
+  </a>
+  <div class="links">
+    <a href="#how">How it works</a>
+    <a href="#feed">Feed</a>
+    <a href="#pricing">Pricing</a>
+    <a class="signin" href="/signin">Sign in</a>
+  </div>
+</nav>
+
+<!-- ─── HERO ─── -->
+<section class="hero">
+  <div>
+    <div class="kicker"><span class="dot"></span> AI literacy + a feed tuned to you</div>
+    <h1 class="headline">Find your <em>bearing</em><br />in AI.</h1>
+    <p class="lede">
+      AI moves fast. Most newsletters dump everything on everyone — the same five tools, the same headlines, the same noise.
+      Compass starts with a 5-minute placement quiz and gives you a personalized feed of news, tools, and prompts that fits
+      <em>where you actually are</em> at work.
+    </p>
+    <div class="cta-row">
+      <a class="cta" href="/quiz">Take the quiz <span class="cta-arrow">→</span></a>
+      <span class="micro">free · 5 min · no signup to try</span>
+    </div>
+  </div>
+
+  <div class="compass-wrap">
+    <svg viewBox="0 0 460 460" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <defs>
+        <radialGradient id="rose-bg" cx="50%" cy="50%" r="50%">
+          <stop offset="0%" stop-color="#f5f1ea" />
+          <stop offset="90%" stop-color="#ebe6dd" />
+        </radialGradient>
+      </defs>
+
+      <g class="compass-rose">
+        <!-- outer ring -->
+        <circle cx="230" cy="230" r="220" fill="url(#rose-bg)" stroke="#1a1614" stroke-width="1.5" />
+        <circle cx="230" cy="230" r="195" fill="none" stroke="#d8d2c4" stroke-width="1" />
+        <circle cx="230" cy="230" r="160" fill="none" stroke="#d8d2c4" stroke-width="1" />
+        <circle cx="230" cy="230" r="115" fill="none" stroke="#d8d2c4" stroke-width="0.75" />
+
+        <!-- degree marks -->
+        <g stroke="#857e6f" stroke-width="0.75">
+          <line x1="230" y1="35"  x2="230" y2="48" />
+          <line x1="230" y1="412" x2="230" y2="425" />
+          <line x1="35"  y1="230" x2="48"  y2="230" />
+          <line x1="412" y1="230" x2="425" y2="230" />
+          <line x1="83"  y1="83"  x2="93"  y2="93" />
+          <line x1="377" y1="83"  x2="367" y2="93" />
+          <line x1="83"  y1="377" x2="93"  y2="367" />
+          <line x1="377" y1="377" x2="367" y2="367" />
+        </g>
+
+        <!-- cardinal labels -->
+        <text x="230" y="28"  text-anchor="middle" class="level-tag active">N · Ready</text>
+        <text x="436" y="234" text-anchor="middle" class="level-tag">E · User</text>
+        <text x="230" y="448" text-anchor="middle" class="level-tag">S · Curious</text>
+        <text x="24"  y="234" text-anchor="middle" class="level-tag">W · Newcomer</text>
+
+        <!-- compass star -->
+        <g>
+          <!-- vertical (N-S) diamond -->
+          <polygon points="230,80 240,230 230,380 220,230" fill="#1a1614" />
+          <polygon points="230,80 230,230 220,230" fill="#4a423a" />
+          <!-- horizontal (E-W) -->
+          <polygon points="80,230 230,220 380,230 230,240" fill="#d44a1c" opacity="0.85" />
+          <polygon points="80,230 230,230 230,220" fill="#b03c14" />
+          <!-- center cap -->
+          <circle cx="230" cy="230" r="9" fill="#1a1614" stroke="#f5f1ea" stroke-width="2" />
+          <circle cx="230" cy="230" r="3" fill="#f5f1ea" />
+        </g>
+      </g>
+
+      <!-- needle (animated) -->
+      <g class="needle">
+        <line x1="230" y1="230" x2="230" y2="105" stroke="#d44a1c" stroke-width="2.5" stroke-linecap="round" />
+        <polygon points="230,95 224,108 236,108" fill="#d44a1c" />
+      </g>
+    </svg>
+  </div>
+</section>
+
+<div class="h-divider"></div>
+
+<!-- ─── HOW IT WORKS ─── -->
+<section class="how" id="how">
+  <div class="section-eyebrow">· How it works ·</div>
+  <h2 class="section-title">A placement test, then a feed that knows where you are.</h2>
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01 · 5 MIN</div>
+      <h3 class="step-title">Take the placement quiz</h3>
+      <p class="step-body">10 adaptive questions across the five major AI tools. Performance-based — no self-rating. The quiz adjusts difficulty as it goes, so it ends quickly if your level is already clear.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">02 · INSTANT</div>
+      <h3 class="step-title">Get your bearing</h3>
+      <p class="step-body">You land on one of four levels — Newcomer, Curious, User, or Ready — and pick the job that describes your work. That's your coordinates. The feed builds around them.</p>
+    </div>
+    <div class="step">
+      <div class="step-num">03 · DAILY</div>
+      <h3 class="step-title">Open your feed</h3>
+      <p class="step-body">Five to ten items a day — news, tools, prompts, how-tos — each one tagged for your level and your work. Same big news, different framing depending on who you are.</p>
+    </div>
+  </div>
+</section>
+
+<!-- ─── SAMPLE FEED ─── -->
+<section class="sample" id="feed">
+  <div class="sample-inner">
+    <div class="section-eyebrow">· What you'll see ·</div>
+    <h2 class="section-title">Same news. Different read, depending on you.</h2>
+    <p style="max-width: 620px; font-size: 15px; line-height: 1.55; color: var(--ink-2); margin-bottom: 40px;">
+      Below: how the same launch story shows up to two different Compass users. Notice the caption changes, not the item.
+    </p>
+
+    <div class="feed-grid">
+      <div class="card">
+        <div class="card-meta">
+          <span class="pill type">News</span>
+          <span class="pill">Newcomer · Retail</span>
+          <span class="pill">2h ago</span>
+        </div>
+        <h3 class="card-title">ChatGPT just got long-term memory across conversations</h3>
+        <p class="card-source">OpenAI · Source: blog.openai.com</p>
+        <p class="card-caption"><strong>Why this matters for you:</strong> if you've been retyping your store hours or shift schedule into ChatGPT every time you ask for help — you don't have to anymore. Tell it once. It remembers.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-meta">
+          <span class="pill type">News</span>
+          <span class="pill">Ready · Developer</span>
+          <span class="pill">2h ago</span>
+        </div>
+        <h3 class="card-title">ChatGPT just got long-term memory across conversations</h3>
+        <p class="card-source">OpenAI · Source: blog.openai.com</p>
+        <p class="card-caption"><strong>Why this matters for you:</strong> the API now exposes <code>memory_keys</code> per user — you can read/write persistent state without your own session store. Migration notes in the linked changelog.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-meta">
+          <span class="pill type">Prompt</span>
+          <span class="pill">Curious · Healthcare</span>
+          <span class="pill">Saved 412×</span>
+        </div>
+        <h3 class="card-title">Patient discharge summary → plain-English explainer</h3>
+        <p class="card-source">Compass prompt library</p>
+        <p class="card-caption"><strong>Why this is for you:</strong> tested with three nurse managers — it turns a clinical discharge note into a one-page summary a patient's family can actually read. Doesn't replace your sign-off; it saves you 20 min per patient.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-meta">
+          <span class="pill type">Tool</span>
+          <span class="pill">User · Office</span>
+          <span class="pill">Free tier</span>
+        </div>
+        <h3 class="card-title">Granola — meeting notes that don't require a recording bot</h3>
+        <p class="card-source">granola.ai</p>
+        <p class="card-caption"><strong>Why this is for you:</strong> if you've avoided Otter/Fireflies because you don't want a bot joining every call, Granola runs locally on your laptop and writes the notes from your mic only. Free tier covers ~25 meetings/month.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ─── PRICING ─── -->
+<section class="pricing" id="pricing">
+  <div class="section-eyebrow">· Pricing ·</div>
+  <h2 class="section-title">Free to use. Pay if you want the deep end.</h2>
+  <div class="plans">
+    <div class="plan free">
+      <div class="plan-tag">Free forever</div>
+      <h3>Compass</h3>
+      <p class="desc">Everything you need to start.</p>
+      <div class="price">
+        <span class="price-num">$0</span>
+        <span class="price-period">/ month</span>
+      </div>
+      <ul class="feat">
+        <li>The placement quiz</li>
+        <li>Up to 5 feed items per day</li>
+        <li>Weekly digest email</li>
+        <li>Save up to 25 items</li>
+      </ul>
+      <a class="cta" href="/quiz">Start with the quiz</a>
+    </div>
+
+    <div class="plan premium">
+      <div class="plan-tag">Premium</div>
+      <h3>Compass+</h3>
+      <p class="desc">For the people who already use AI daily and want the deep end.</p>
+      <div class="price">
+        <span class="price-num">$9</span>
+        <span class="price-period">/ month</span>
+      </div>
+      <ul class="feat">
+        <li>Full daily feed (no item cap)</li>
+        <li>Full prompt library — every level × job</li>
+        <li>Monthly deep-dives written for your level</li>
+        <li>Archive search across all past items</li>
+        <li>Custom feed controls (mute topics, pin tools)</li>
+      </ul>
+      <a class="cta" href="/upgrade">Try Compass+ free for 14 days</a>
+    </div>
+  </div>
+</section>
+
+<!-- ─── FOOTER ─── -->
+<footer>
+  <div class="foot-brand">Compass<span style="color: var(--accent);">.</span></div>
+  <div class="foot-line">find your bearing in ai</div>
+  <div class="foot-line" style="color: var(--ink-2);">© 2026</div>
+</footer>
+
+</body>
+</html>

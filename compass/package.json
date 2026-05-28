@@ -1,0 +1,39 @@
+{
+  "name": "compass",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "typecheck": "tsc --noEmit",
+    "db:seed": "tsx --env-file=.env.local db/seed-items.ts",
+    "db:captions": "tsx --env-file=.env.local db/prebake-captions.ts",
+    "db:ingest": "tsx --env-file=.env.local db/ingest.ts"
+  },
+  "dependencies": {
+    "next": "^14.2.5",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "@clerk/nextjs": "^6.0.0",
+    "@neondatabase/serverless": "^0.10.0",
+    "@next/env": "^14.2.5",
+    "openai": "^4.55.0",
+    "resend": "^4.0.0",
+    "stripe": "^16.6.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "autoprefixer": "^10.4.20",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.10",
+    "tsx": "^4.19.0",
+    "typescript": "^5.5.4",
+    "eslint": "^8",
+    "eslint-config-next": "^14.2.5"
+  }
+}
